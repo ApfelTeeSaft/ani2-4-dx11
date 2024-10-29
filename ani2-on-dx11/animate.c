@@ -18,12 +18,11 @@ Abstract:
 #pragma data_seg("INIT_RW")
 #pragma const_seg("INIT_RD")
 
-#include "ntos.h"
+// #include "ntdef.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "wtypes.h"
 
-#include "ani.h"
 
 // Tell linker to put startup animation code and data into INIT section
 #pragma comment(linker, "/merge:INIT_RD=INIT")
@@ -52,13 +51,278 @@ BOOL gBootAnimation_DoSound = FALSE;
 #endif
 
 // definitions ripped from src
+
+#define DECLSPEC_RDATA
+
+typedef CCHAR KPROCESSOR_MODE;
+typedef signed char SCHAR;
+typedef SCHAR* PSCHAR;
+typedef UCHAR KIRQL;
+typedef KIRQL* PKIRQL;
+typedef short CSHORT;
+
+typedef enum _MODE {
+    KernelMode,
+    MaximumMode
+} MODE;
+
+typedef enum _WAIT_TYPE {
+    WaitAll,
+    WaitAny,
+    WaitNotification,
+    WaitDequeue,
+    WaitDpc
+} WAIT_TYPE;
+
+typedef PVOID(*OB_ALLOCATE_METHOD)(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag
+    );
+
+typedef VOID(*OB_FREE_METHOD)(
+    IN PVOID Pointer
+    );
+
+typedef VOID(*OB_CLOSE_METHOD)(
+    IN PVOID Object,
+    IN ULONG SystemHandleCount
+    );
+
+typedef VOID(*OB_DELETE_METHOD)(
+    IN PVOID Object
+    );
+
+typedef struct _STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+#ifdef MIDL_PASS
+    [size_is(MaximumLength), length_is(Length)]
+#endif // MIDL_PASS
+        _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
+} STRING;
+
+typedef STRING *PSTRING;
+typedef PSTRING POBJECT_STRING;
+
+typedef NTSTATUS(*OB_PARSE_METHOD)(
+    IN PVOID ParseObject,
+    IN struct _OBJECT_TYPE* ObjectType,
+    IN ULONG Attributes,
+    IN OUT POBJECT_STRING CompleteName,
+    IN OUT POBJECT_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    OUT PVOID* Object
+    );
+
+typedef struct _OBJECT_TYPE {
+    OB_ALLOCATE_METHOD AllocateProcedure;
+    OB_FREE_METHOD FreeProcedure;
+    OB_CLOSE_METHOD CloseProcedure;
+    OB_DELETE_METHOD DeleteProcedure;
+    OB_PARSE_METHOD ParseProcedure;
+    PVOID DefaultObject;
+    ULONG PoolTag;
+} OBJECT_TYPE, * POBJECT_TYPE;
+
+typedef
+VOID
+(*PKNORMAL_ROUTINE) (
+    IN PVOID NormalContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+    );
+
+typedef
+VOID
+(*PKSTART_ROUTINE) (
+    IN PVOID StartContext
+    );
+
+typedef
+VOID
+(*PKRUNDOWN_ROUTINE) (
+    IN struct _KAPC* Apc
+    );
+
+PVOID
+ExAllocatePoolWithTag(
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag
+)
+
+#define VOID void
+
+VOID
+ExFreePool(
+    IN PVOID P
+)
+
+__declspec(selectany) OBJECT_TYPE PsThreadObjectType = {
+    ExAllocatePoolWithTag,
+    ExFreePool,
+    NULL,
+    NULL,
+    NULL,
+    (PVOID)FIELD_OFFSET(KTHREAD, Header),
+    'erhT'
+};
+
+typedef
+VOID
+(*PKKERNEL_ROUTINE) (
+    IN struct _KAPC* Apc,
+    IN OUT PKNORMAL_ROUTINE* NormalRoutine,
+    IN OUT PVOID* NormalContext,
+    IN OUT PVOID* SystemArgument1,
+    IN OUT PVOID* SystemArgument2
+    );
+
+typedef struct _KSEMAPHORE {
+    DISPATCHER_HEADER Header;
+    LONG Limit;
+} KSEMAPHORE, * PKSEMAPHORE, * RESTRICTED_POINTER PRKSEMAPHORE;
+
+typedef struct _KWAIT_BLOCK {
+    LIST_ENTRY WaitListEntry;
+    struct _KTHREAD* RESTRICTED_POINTER Thread;
+    PVOID Object;
+    struct _KWAIT_BLOCK* RESTRICTED_POINTER NextWaitBlock;
+    USHORT WaitKey;
+    USHORT WaitType;
+} KWAIT_BLOCK, * PKWAIT_BLOCK, * RESTRICTED_POINTER PRKWAIT_BLOCK;
+
+typedef struct _KAPC_STATE {
+    LIST_ENTRY ApcListHead[MaximumMode];
+    struct _KPROCESS* Process;
+    BOOLEAN KernelApcInProgress;
+    BOOLEAN KernelApcPending;
+    BOOLEAN UserApcPending;
+    BOOLEAN ApcQueueable;
+} KAPC_STATE, * PKAPC_STATE, * RESTRICTED_POINTER PRKAPC_STATE;
+
+typedef struct _KQUEUE {
+    DISPATCHER_HEADER Header;
+    LIST_ENTRY EntryListHead;
+    ULONG CurrentCount;
+    ULONG MaximumCount;
+    LIST_ENTRY ThreadListHead;
+} KQUEUE, * PKQUEUE, * RESTRICTED_POINTER PRKQUEUE;
+
+typedef struct _KTIMER {
+    DISPATCHER_HEADER Header;
+    ULARGE_INTEGER DueTime;
+    LIST_ENTRY TimerListEntry;
+    struct _KDPC* Dpc;
+    LONG Period;
+} KTIMER, * PKTIMER, * RESTRICTED_POINTER PRKTIMER;
+
+typedef struct _KAPC {
+    CSHORT Type;
+    KPROCESSOR_MODE ApcMode;
+    BOOLEAN Inserted;
+    struct _KTHREAD* Thread;
+    LIST_ENTRY ApcListEntry;
+    PKKERNEL_ROUTINE KernelRoutine;
+    PKRUNDOWN_ROUTINE RundownRoutine;
+    PKNORMAL_ROUTINE NormalRoutine;
+    PVOID NormalContext;
+
+    //
+    // N.B. The following two members MUST be together.
+    //
+
+    PVOID SystemArgument1;
+    PVOID SystemArgument2;
+} KAPC, * PKAPC, * RESTRICTED_POINTER PRKAPC;
+
+typedef struct _KTHREAD {
+
+    //
+    // The dispatcher header and mutant listhead are fairly infrequently
+    // referenced, but pad the thread to a 32-byte boundary (assumption
+    // that pool allocation is in units of 32-bytes).
+    //
+
+    DISPATCHER_HEADER Header;
+    LIST_ENTRY MutantListHead;
+
+    //
+    // The following entries are referenced during clock interrupts.
+    //
+
+    ULONG KernelTime;
+
+    //
+    // The following fields are referenced during trap, interrupts, or
+    // context switches.
+    //
+
+    PVOID StackBase;
+    PVOID StackLimit;
+    PVOID KernelStack;
+    PVOID TlsData;
+    UCHAR State;
+    BOOLEAN Alerted[MaximumMode];
+    BOOLEAN Alertable;
+    UCHAR NpxState;
+    CHAR Saturation;
+    SCHAR Priority;
+    UCHAR Padding;
+    KAPC_STATE ApcState;
+    ULONG ContextSwitches;
+
+    //
+    // The following fields are referenced during wait operations.
+    //
+
+    LONG_PTR WaitStatus;
+    KIRQL WaitIrql;
+    KPROCESSOR_MODE WaitMode;
+    BOOLEAN WaitNext;
+    UCHAR WaitReason;
+    PRKWAIT_BLOCK WaitBlockList;
+    LIST_ENTRY WaitListEntry;
+    ULONG WaitTime;
+    ULONG KernelApcDisable;
+    LONG Quantum;
+    SCHAR BasePriority;
+    UCHAR DecrementCount;
+    SCHAR PriorityDecrement;
+    BOOLEAN DisableBoost;
+    UCHAR NpxIrql;
+    CCHAR SuspendCount;
+    BOOLEAN Preempted;
+    BOOLEAN HasTerminated;
+
+    //
+    // The following fields are referenced during queue operations.
+    //
+
+    PRKQUEUE Queue;
+    LIST_ENTRY QueueListEntry;
+
+    //
+    // The following fields are referenced when the thread is blocking for a
+    // timed interval.
+    //
+
+    KTIMER Timer;
+    KWAIT_BLOCK TimerWaitBlock;
+
+    //
+    // The following fields are referenced when the thread is initialized
+    // and very infrequently thereafter.
+    //
+
+    KAPC SuspendApc;
+    KSEMAPHORE SuspendSemaphore;
+    LIST_ENTRY ThreadListEntry;
+
+} KTHREAD, * PKTHREAD, * RESTRICTED_POINTER PRKTHREAD;
+
 typedef enum _KWAIT_REASON {
     Executive
 } KWAIT_REASON;
-
-typedef enum _MODE {
-    KernelMode
-} MODE;
 
 typedef struct _DISPATCH_HEADER {
     UCHAR Type;
@@ -82,7 +346,38 @@ typedef struct _KWAIT_BLOCK {
     USHORT WaitType;
 } KWAIT_BLOCK, *PKWAIT_BLOCK, *RESTRICTED_POINTER PKWAIT_BLOCK;
 
+typedef struct _ETHREAD {
+    KTHREAD Tcb;
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER ExitTime;
 
+    union {
+        NTSTATUS ExitStatus;
+        PVOID OfsChain;       // needed for the nt build of the C runtime
+    };
+    union {
+        LIST_ENTRY ReaperListEntry;
+        LIST_ENTRY ActiveTimerListHead;
+    };
+    HANDLE UniqueThread;
+    PVOID StartAddress;
+
+    //
+    // Io
+    //
+
+    LIST_ENTRY IrpList;
+
+#ifdef DEVKIT
+    //
+    // Dm
+    //
+    // keep this at the end so kd exts don't get confused
+    //
+
+    PVOID DebugData;
+#endif
+} ETHREAD, * PETHREAD;
 
 // Background animation thread.
 HANDLE g_hThread;
