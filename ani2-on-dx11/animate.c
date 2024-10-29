@@ -51,6 +51,39 @@ BOOL gBootAnimation_DoSound = TRUE;
 BOOL gBootAnimation_DoSound = FALSE;
 #endif
 
+// definitions ripped from src
+typedef enum _KWAIT_REASON {
+    Executive
+} KWAIT_REASON;
+
+typedef enum _MODE {
+    KernelMode
+} MODE;
+
+typedef struct _DISPATCH_HEADER {
+    UCHAR Type;
+    UCHAR Absolute;
+    UCHAR Size;
+    UCHAR Inserted;
+    LONG SignalState;
+    LIST_ENTRY WaitListHead;
+} DISPATCHER_HEADER;
+
+typedef struct _KEVENT {
+    DISPATCHER_HEADER Header;
+} KEVENT, *PKEVENT, *RESTRICTED_POINTER PKEVENT;
+
+typedef struct _KWAIT_BLOCK {
+    LIST_ENTRY WaitListEntry;
+    struct _KTHREAD *RESTRICTED_POINTER Thread;
+    PVOID Object;
+    struct _KWAIT_BLOCK* RESTRICTED_POINTER NextWaitBlock;
+    USHORT WaitKey;
+    USHORT WaitType;
+} KWAIT_BLOCK, *PKWAIT_BLOCK, *RESTRICTED_POINTER PKWAIT_BLOCK;
+
+
+
 // Background animation thread.
 HANDLE g_hThread;
 
