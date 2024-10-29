@@ -128,12 +128,76 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ani2-on-dx11.h" />
+    <ClInclude Include="BlobRenderer.h" />
+    <ClInclude Include="Blobs.h" />
+    <ClInclude Include="bootsnd.h" />
+    <ClInclude Include="bootsound.h" />
+    <ClInclude Include="CamControl.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="defines.h" />
+    <ClInclude Include="dsptables.h" />
+    <ClInclude Include="EXTERNS.H" />
+    <ClInclude Include="fastmath.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="FTABLES.H" />
+    <ClInclude Include="GreenFog.h" />
+    <ClInclude Include="logo_geometry.h" />
+    <ClInclude Include="logo_renderer.h" />
+    <ClInclude Include="Macros.h" />
+    <ClInclude Include="mslogo.h" />
+    <ClInclude Include="Pitches.h" />
+    <ClInclude Include="PlacementDoodad.h" />
+    <ClInclude Include="precomp.h" />
+    <ClInclude Include="prim_types.h" />
+    <ClInclude Include="PROTOS.H" />
+    <ClInclude Include="qrand.h" />
+    <ClInclude Include="renderer.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="scene_geometry.h" />
+    <ClInclude Include="scene_renderer.h" />
+    <ClInclude Include="shaders.h" />
+    <ClInclude Include="Shield.h" />
+    <ClInclude Include="SOS.H" />
+    <ClInclude Include="sosdsp.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="text_geometry.h" />
+    <ClInclude Include="tex_gen.h" />
+    <ClInclude Include="tm_pixels.h" />
+    <ClInclude Include="VBlob.h" />
+    <ClInclude Include="xbinput.h" />
+    <ClInclude Include="xbs_app.h" />
+    <ClInclude Include="xbs_math.h" />
+    <ClInclude Include="xbs_math_inl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ani2-on-dx11.cpp" />
+    <ClCompile Include="animate.c" />
+    <ClCompile Include="BlobRenderer.cpp" />
+    <ClCompile Include="Blobs.cpp" />
+    <ClCompile Include="bootsound.cpp" />
+    <ClCompile Include="CamControl.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="CF.C" />
+    <ClCompile Include="DEV.C" />
+    <ClCompile Include="EVF.C" />
+    <ClCompile Include="fastmath.cpp" />
+    <ClCompile Include="GLOBALS.C" />
+    <ClCompile Include="GreenFog.cpp" />
+    <ClCompile Include="logo_renderer.cpp" />
+    <ClCompile Include="mslogo.cpp" />
+    <ClCompile Include="PlacementDoodad.cpp" />
+    <ClCompile Include="PROC.C" />
+    <ClCompile Include="qrand.cpp" />
+    <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="scene_renderer.cpp" />
+    <ClCompile Include="Shield.cpp" />
+    <ClCompile Include="SOS.C" />
+    <ClCompile Include="st.c" />
+    <ClCompile Include="stboot.c" />
+    <ClCompile Include="tex_gen.cpp" />
+    <ClCompile Include="VBlob.cpp" />
+    <ClCompile Include="xbinput.cpp" />
+    <ClCompile Include="xbs_app.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ani2-on-dx11.rc" />
