@@ -157,7 +157,7 @@ ExFreePool(
     IN PVOID P
 )
 
-__declspec(selectany) OBJECT_TYPE PsThreadObjectType = {
+DECLSPEC_RDATA OBJECT_TYPE PsThreadObjectType = {
     ExAllocatePoolWithTag,
     ExFreePool,
     NULL,
